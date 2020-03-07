@@ -86,8 +86,12 @@ void ter_move_cursor(cursor_direction d) {
       if (app_state->text_rows[app_state->cy].data_len <= app_state->cx) {
         // There is text on the next line and the previous line is larger
         // We move the cursor to the end of the line
+
+        printf("\x1b[999D");
         app_state->cx = app_state->text_rows[app_state->cy].data_len;
-        printf("\x1b[999D\x1b[%dC",app_state->cx);
+        if (app_state->cx > 0) {
+          printf("\x1b[%dC",app_state->cx);
+        }
         fflush(stdout);
       }
 
@@ -106,8 +110,20 @@ void ter_move_cursor(cursor_direction d) {
       write(STDOUT_FILENO, "\x1b[1C", 4);
       break;
     case LEFT:
-      if (app_state->cx == 0)
+      if (app_state->cx == 0) {
+        if (app_state->cy == 0) {
+          break;
+        }
+
+        app_state->cy--;
+        app_state->cx = app_state->text_rows[app_state->cy].data_len;
+        printf("\x1b[1A\x1b[999D");
+        if (app_state->cx > 0) {
+          printf("\x1b[%dC",app_state->cx);
+        }
+        fflush(stdout);
         break;
+      }
 
       app_state->cx--;
       write(STDOUT_FILENO, "\x1b[1D", 4);

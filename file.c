@@ -33,12 +33,18 @@ void file_load() {
 
   char *buf = malloc(sizeof(char) * longest_line_len);
   for (int i = 0; i < lines; i++) {
-    int raw_size = getline(&buf, &longest_line_len, f);
-    int size = raw_size - 2;
-
-    app_state->text_rows[i].data_len = size;
+    // line initialization
+    app_state->text_rows[i].data_len = 0;
     app_state->text_rows[i].data = malloc(sizeof(char) * TR_LINE_BUFF_SIZE);
     app_state->text_rows[i].buff_len = TR_LINE_BUFF_SIZE;
+
+    int raw_size = getline(&buf, &longest_line_len, f);
+    if (raw_size < 0) {
+      continue;
+    }
+
+    int size = raw_size - 2;
+    app_state->text_rows[i].data_len = size;
     memcpy(app_state->text_rows[i].data, buf, size);
     app_state->text_rows[i].data[size] = '\0';
   }
@@ -63,6 +69,9 @@ void file_save() {
 
   char *buf = malloc(sizeof(char) * buflen);
   for (int i = 0; i < app_state->nb_text_rows; i++) {
+    if (i == app_state->nb_text_rows - 1 && app_state->text_rows[i].data_len == 0)
+      continue;
+
     int datalen = app_state->text_rows[i].data_len;
     memcpy(buf, app_state->text_rows[i].data, datalen);
     buf[datalen] = '\r';
